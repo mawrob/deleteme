@@ -35,13 +35,14 @@ void setup() {
         Particle.publish("TSCreateChannel", TSChanSettings, PRIVATE);    
         
         // Subscribe to the integration response event
-        Particle.subscribe(System.deviceID() + "/hook-response/TSCreateChannel", saveTSIdKeys, MY_DEVICES);      
+        Particle.subscribe(System.deviceID() + "/hook-response/TSCreateChannel", saveTSIdKeys, MY_DEVICES);
+	TSChanIdKeys.firstRun = true;
     }
 
 }
 
 void loop() {
-
+  if (!TSChanIdKeys.firstRun){
     // {
     //   "write_api_key": "{{k}}",
     //   "time_format": "{{t}}",
@@ -54,6 +55,7 @@ void loop() {
     delay(3000);
     blinkMagenta.setActive(false);
     delay(57000);
+  }
 }
 
 
@@ -89,7 +91,7 @@ void saveTSIdKeys(const char *event, const char *data) {
     EEPROM.put(0, TSChanIdKeys);
     // Read back to check
     EEPROM.get(0, TSChanIdKeys);
-
+    TSChanIdKeys.firstRun = false;
 String message = String(TSChanIdKeys.channelId) + ":" + String(TSChanIdKeys.writeKey) + ":" + String(TSChanIdKeys.readKey);
     
 Particle.publish("Channel created",message);
