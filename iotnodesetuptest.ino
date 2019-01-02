@@ -1,6 +1,6 @@
 
 //
-const int firstRunTest = 11221211221121122;
+const int firstRunTest = 112212;
 
 // struct to save created TS channel Id and keys
 struct Settings {
