@@ -1,6 +1,8 @@
 
+#include <ArduinoJson.h>
+
 //
-const int firstRunTest = 112212;
+const int firstRunTest = 1122123;
 
 // struct to save created TS channel Id and keys
 struct Settings {
@@ -65,36 +67,31 @@ void saveTSIdKeys(const char *event, const char *data) {
     // The first time the device is run the TS channel Id and keys are
     // saved in EEPROM
 
-	// {{id}}~{{#api_keys}}{{api_key}}~{{/api_keys}}
-	String TSdata=String(data);
-
-    int tildeIndexBegin = 0;
-    int tildeIndexEnd = TSdata.indexOf('~');
-
-    int n=0;
-    String responseValues[3];
-    while (tildeIndexEnd>0)
-    {
-        responseValues[n] = TSdata.substring(tildeIndexBegin, tildeIndexEnd);
-        tildeIndexBegin = tildeIndexEnd + 1;
-        tildeIndexEnd = TSdata.indexOf('~',tildeIndexBegin);
-        n++;
-    }
-    TSChanIdKeys.channelId = responseValues[0].toInt();
-    unsigned int len;
-    len = responseValues[1].length()+1;
-    responseValues[1].toCharArray(TSChanIdKeys.writeKey, len);
-    responseValues[2].toCharArray(TSChanIdKeys.readKey, len);
-    TSChanIdKeys.testCheck = firstRunTest;
-    TSChanIdKeys.firstRun = false;
-    // Save settings
-    EEPROM.put(0, TSChanIdKeys);
-    // Read back to check
-    EEPROM.get(0, TSChanIdKeys);
-    TSChanIdKeys.firstRun = false;
-String message = String(TSChanIdKeys.channelId) + ":" + String(TSChanIdKeys.writeKey) + ":" + String(TSChanIdKeys.readKey);
-    
-Particle.publish("Channel created",message);
+	// {"i":{{id}},"w":"{{api_keys.0.api_key}}", "r":"{{api_keys.1.api_key}}"}
+  StaticJsonBuffer<256> jb;
+  #ifdef DEBUG
+  Serial.println(data);
+  #endif
+  JsonObject& obj = jb.parseObject(data);
+  if (obj.success()) {
+      int channelId = obj["i"];
+      const char* write_key = obj["w"];
+      const char* read_key = obj["r"];
+      TSChanIdKeys.channelId = channelId;
+      strcpy(TSChanIdKeys.writeKey,write_key);
+      strcpy(TSChanIdKeys.readKey,read_key);
+      TSChanIdKeys.testCheck = firstRunTest;
+      TSChanIdKeys.firstRun = false;
+      // Save settings
+      EEPROM.put(0, TSChanIdKeys);
+      // Read back to check
+      EEPROM.get(0, TSChanIdKeys);
+      String message = String(TSChanIdKeys.channelId) + ":" + String(TSChanIdKeys.writeKey) + ":" + String(TSChanIdKeys.readKey);
+      Particle.publish("Channel created",message);
+  } else {
+      Serial.println("Parse failed");
+      Particle.publish("Parse failed",data);
+  }
     
 }
           
