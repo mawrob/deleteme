@@ -2,7 +2,7 @@
 #include <ArduinoJson.h>
 
 //
-const int firstRunTest = 1122123;
+const int firstRunTest = 1122124;
 
 // struct to save created TS channel Id and keys
 struct Settings {
